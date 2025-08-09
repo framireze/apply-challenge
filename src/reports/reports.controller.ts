@@ -1,34 +1,32 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ValidationPipe } from '@nestjs/common';
 import { ReportsService } from './reports.service';
-import { CreateReportDto } from './dto/create-report.dto';
-import { UpdateReportDto } from './dto/update-report.dto';
+import { NonDeletedProductsParamsDto } from './dto/nonDeleteProducts-reports.dto';
+import { GetModelsByBrandParamsDto } from './dto/getModelByBrand.dto';
 
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
-  @Post()
-  create(@Body() createReportDto: CreateReportDto) {
-    return this.reportsService.create(createReportDto);
+  @Get('deleted-percentage')
+  getDeletedProductsReport() {
+    return this.reportsService.getDeletedProductsReport();
   }
 
-  @Get()
-  findAll() {
-    return this.reportsService.findAll();
+  @Get('non-deleted-percentage')
+  getNonDeletedPercentage(@Query(
+    new ValidationPipe({
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: false
+      },
+    })
+  ) 
+    q: NonDeletedProductsParamsDto) {
+    return this.reportsService.getNonDeletedProductsPercentage(q);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reportsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReportDto: UpdateReportDto) {
-    return this.reportsService.update(+id, updateReportDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reportsService.remove(+id);
+  @Get('models')
+  getModelsByBrand(@Query() q: GetModelsByBrandParamsDto) {
+    return this.reportsService.getModelsByBrand(q);
   }
 }

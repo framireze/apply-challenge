@@ -72,7 +72,7 @@ export class Product {
   })
   updatedAt: Date;
 
-  @DeleteDateColumn({
+  @Column({
     type: 'timestamp',
     nullable: true,
     select: false,

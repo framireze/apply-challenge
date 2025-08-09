@@ -39,6 +39,12 @@ export class ProductsService {
     }
   }
 
+  async getAllProducts(isActive?: boolean): Promise<Product[]> {
+    let products= await this.productRepository.find({ select: { id: true, sku: true, name: true, brand: true, model: true, category: true, color: true, price: true, currency: true, stock: true, isActive: true, deletedAt: true } });
+    if (isActive !== undefined) products = products.filter(product => product.isActive === isActive);
+    return products;
+  }
+
   async create(createProductDto: CreateProductDto) {
     try{      
       const product = this.productRepository.create(createProductDto);
