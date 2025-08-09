@@ -10,6 +10,9 @@ export const envValidationSchema = Joi.object({
         .port()
         .default(3000),
 
+    SECRET_KEY: Joi.string()
+        .required(),
+
     // CONTENT
     CONTENTFUL_SPACE_ID: Joi.string()
         .required(),
