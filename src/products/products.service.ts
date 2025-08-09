@@ -1,0 +1,137 @@
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Product } from './entities/product.entity';
+import { Repository } from 'typeorm';
+import { ContentfulProductItem } from 'src/contentful/interfaces/contentful-response.interface';
+import _ from 'lodash';
+
+@Injectable()
+export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+  constructor(
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+  ) {}
+
+  async create(createProductDto: CreateProductDto) {
+    try{      
+      const product = this.productRepository.create(createProductDto);
+      return this.productRepository.save(product);
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
+  async updateProduct(sku: string, updateProductDto: UpdateProductDto) {
+    try{
+      const product = await this.productRepository.findOne({ where: { sku } });
+      if (!product) {
+        throw new NotFoundException('Product not found');
+      }
+      return this.productRepository.save({ ...product, ...updateProductDto });
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
+  async deleteProduct(sku: string) {
+    try{
+      const product = await this.productRepository.findOne({ where: { sku } });
+      if (!product) throw new NotFoundException('Product not found');
+      product.isActive = false;
+      await this.productRepository.save(product);
+      return { success: true, message: 'Product deleted successfully' };
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
+  async processProducts(products: ContentfulProductItem[]): Promise<{ total: number, created: number, updated: number, notAffected: number, skuAffected: string[] }> {
+    const results = {
+      total: products.length,
+      created: 0,
+      updated: 0,
+      notAffected: 0,
+      skuAffected: [] as string[],
+    }
+    try{
+      for (const product of products) {
+        const productDB = await this.productRepository.findOne({ where: { sku: product.fields.sku } });
+        if (!productDB) {
+          const newProduct = this.productRepository.create({
+            sku: product.fields.sku,
+            name: product.fields.name,
+            brand: product.fields.brand,
+            model: product.fields.model,
+            category: product.fields.category,
+            color: product.fields.color,
+            price: product.fields.price,
+            currency: product.fields.currency,
+            stock: product.fields.stock,
+            isActive: true,
+            contentfulId: product.sys.id,
+            contentfulCreatedAt: new Date(product.sys.createdAt),
+            contentfulUpdatedAt: new Date(product.sys.updatedAt),
+            contentfulRevision: product.sys.revision,
+            contentType: product.sys.contentType.sys.id,
+          });
+          await this.productRepository.save(newProduct);
+          results.created++;
+        } else {
+          const {item, isEqual} = this.hasProductChanged(product, productDB);
+          if (!isEqual) {
+            await this.productRepository.save({ ...productDB, ...item });
+            results.updated++;
+            results.skuAffected.push(productDB.sku);
+          } else {
+            results.notAffected++;
+          }
+        }
+      }
+
+      return results;
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
+  private hasProductChanged(item: ContentfulProductItem, existing: Product): {item: UpdateProductDto, isEqual: boolean} {
+    const contentfulData = {
+      name: item.fields.name,
+      brand: item.fields.brand,
+      model: item.fields.model,
+      category: item.fields.category,
+      color: item.fields.color,
+      price: Number(item.fields.price),
+      currency: item.fields.currency,
+      stock: Number(item.fields.stock),
+      contentfulId: item.sys.id,
+      contentType: item.sys.contentType.sys.id,
+    };
+    const existingData = _.pick(existing, ['name', 'brand', 'model', 'category', 'color', 'price', 'stock', 'currency', 'contentfulId', 'contentType']);
+    existingData.price = Number(existingData.price);
+    existingData.stock = Number(existingData.stock);
+  
+    return {item: contentfulData, isEqual: _.isEqual(contentfulData, existingData)};
+  }
+
+  private handleException(error: Error): never {
+    this.logger.error(error.message, error.stack);
+    if (error instanceof NotFoundException) {
+      throw error;
+    } else if (error.name === 'QueryFailedError') {
+      throw new BadRequestException({ success: false, message: error.message });
+    } else if (error instanceof ConflictException) {
+      throw new ConflictException({ success: false, message: error.message })
+    } else if (error instanceof UnauthorizedException) {
+      throw new UnauthorizedException({ success: false, message: error.message })
+    } else {
+      throw new InternalServerErrorException({
+        success: false,
+        message: 'An error occurred',
+      });
+    }
+  }
+}
