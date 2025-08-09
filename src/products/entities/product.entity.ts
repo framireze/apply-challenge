@@ -37,17 +37,17 @@ export class Product {
   stock: number;
 
   // Campos de control interno
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 100, select: false })
   contentfulId: string; // sys.id de Contentful
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean; // Para soft delete logic
 
   // Timestamps de Contentful (importante para sincronización)
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', select: false })
   contentfulCreatedAt: Date; // sys.createdAt
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', select: false })
   contentfulUpdatedAt: Date; // sys.updatedAt
 
   @Column({ type: 'int' })
@@ -60,6 +60,7 @@ export class Product {
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
+    select: false,
   })
   createdAt: Date;
 
@@ -67,12 +68,14 @@ export class Product {
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
+    select: false,
   })
   updatedAt: Date;
 
   @DeleteDateColumn({
     type: 'timestamp',
     nullable: true,
+    select: false,
   })
   deletedAt?: Date;
 

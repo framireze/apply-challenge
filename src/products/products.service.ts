@@ -6,6 +6,7 @@ import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
 import { ContentfulProductItem } from 'src/contentful/interfaces/contentful-response.interface';
 import _ from 'lodash';
+import { GetProductsQueryDto } from './dto/get-products-query.dto';
 
 @Injectable()
 export class ProductsService {
@@ -14,6 +15,29 @@ export class ProductsService {
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
   ) {}
+
+  async getProducts(filters: GetProductsQueryDto): Promise<{ success: boolean, message: string, data: Product[], total: number, page: number, limit: number }> {
+    try{
+      let products = await this.productRepository.find({ where: { isActive: true } });
+      if (filters.name) products = products.filter(product => product.name.toLowerCase().includes(filters.name.toLowerCase()));
+      if (filters.category) products = products.filter(product => product.category.toLowerCase().includes(filters.category.toLowerCase()));
+      if (filters.minPrice) products = products.filter(product => Number(product.price) >= filters.minPrice);
+      if (filters.maxPrice) products = products.filter(product => Number(product.price) <= filters.maxPrice);
+      if (filters.brand) products = products.filter(product => product.brand.toLowerCase().includes(filters.brand.toLowerCase()));
+      if (filters.model) products = products.filter(product => product.model?.toLowerCase().includes(filters.model.toLowerCase()));
+
+      // Pagination
+      products = products.sort((a, b) => a.name.localeCompare(b.name, "en", { ignorePunctuation: true }));
+      const total = products.length;
+      const startIndex = (filters.page - 1) * filters.limit;
+      const endIndex = startIndex + filters.limit;
+      const paginatedProducts = products.slice(startIndex, endIndex);
+
+      return { success: true, message: 'Products fetched successfully', total, page: filters.page, limit: filters.limit, data: paginatedProducts };
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
 
   async create(createProductDto: CreateProductDto) {
     try{      
@@ -41,6 +65,7 @@ export class ProductsService {
       const product = await this.productRepository.findOne({ where: { sku } });
       if (!product) throw new NotFoundException('Product not found');
       product.isActive = false;
+      product.deletedAt = new Date();
       await this.productRepository.save(product);
       return { success: true, message: 'Product deleted successfully' };
     } catch (error) {
