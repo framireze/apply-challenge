@@ -64,65 +64,69 @@ export class ReportsService {
   }
 
   async getNonDeletedProductsPercentage(params: NonDeletedProductsParamsDto) {
-    const { startDate, endDate, withPrice } = params;
-    console.log('withPrice', withPrice);
-    const qb = this.productRepo
-      .createQueryBuilder('p')
-      .select([
-        'COUNT(*)::int AS total_products',
-        'SUM(CASE WHEN p."isActive" = true THEN 1 ELSE 0 END)::int AS total_no_deleted',
-        'SUM(CASE WHEN p."isActive" = true AND p."price" > 0 THEN 1 ELSE 0 END)::int AS no_deleted_with_price',
-        'SUM(CASE WHEN p."isActive" = true AND p."price" = 0 THEN 1 ELSE 0 END)::int AS no_deleted_without_price',
-      ]);
+    try {
+      const { startDate, endDate, withPrice } = params;
+      console.log('withPrice', withPrice);
+      const qb = this.productRepo
+        .createQueryBuilder('p')
+        .select([
+          'COUNT(*)::int AS total_products',
+          'SUM(CASE WHEN p."isActive" = true THEN 1 ELSE 0 END)::int AS total_no_deleted',
+          'SUM(CASE WHEN p."isActive" = true AND p."price" > 0 THEN 1 ELSE 0 END)::int AS no_deleted_with_price',
+          'SUM(CASE WHEN p."isActive" = true AND p."price" = 0 THEN 1 ELSE 0 END)::int AS no_deleted_without_price',
+        ]);
 
-    if (startDate && endDate) {
-      qb.andWhere('p."createdAt" BETWEEN :from AND :to', {
-        from: new Date(startDate),
-        to: new Date(endDate),
-      });
-    }
+      if (startDate && endDate) {
+        qb.andWhere('p."createdAt" BETWEEN :from AND :to', {
+          from: new Date(startDate),
+          to: new Date(endDate),
+        });
+      }
 
-    const raw = await qb.getRawOne<{
-      total_products: number;
-      total_no_deleted: number;
-      no_deleted_with_price: number;
-      no_deleted_without_price: number;
-    }>();
-    console.log(raw);
-    const total = Number(raw?.total_products ?? 0);
-    const withP = Number(raw?.no_deleted_with_price ?? 0);
-    const withoutP = Number(raw?.no_deleted_without_price ?? 0);
-    const noDeleted = Number(raw?.total_no_deleted ?? 0);
+      const raw = await qb.getRawOne<{
+        total_products: number;
+        total_no_deleted: number;
+        no_deleted_with_price: number;
+        no_deleted_without_price: number;
+      }>();
+      console.log(raw);
+      const total = Number(raw?.total_products ?? 0);
+      const withP = Number(raw?.no_deleted_with_price ?? 0);
+      const withoutP = Number(raw?.no_deleted_without_price ?? 0);
+      const noDeleted = Number(raw?.total_no_deleted ?? 0);
 
-    let percentageResult: number;
+      let percentageResult: number;
 
-    const boleanPrice =
-      withPrice === BooleanString.TRUE
-        ? true
-        : withPrice === BooleanString.FALSE
-          ? false
-          : undefined;
-    if (boleanPrice == undefined) {
-      percentageResult = Number(((noDeleted / total) * 100).toFixed(2));
-    } else if (boleanPrice) {
-      percentageResult = Number(((withP / total) * 100).toFixed(2));
-    } else {
-      percentageResult = Number(((withoutP / total) * 100).toFixed(2));
-    }
+      const boleanPrice =
+        withPrice === BooleanString.TRUE
+          ? true
+          : withPrice === BooleanString.FALSE
+            ? false
+            : undefined;
+      if (boleanPrice == undefined) {
+        percentageResult = Number(((noDeleted / total) * 100).toFixed(2));
+      } else if (boleanPrice) {
+        percentageResult = Number(((withP / total) * 100).toFixed(2));
+      } else {
+        percentageResult = Number(((withoutP / total) * 100).toFixed(2));
+      }
 
-    return {
-      success: true,
-      message: 'Percentage of non-deleted products',
-      data: {
-        scope: { startDate, endDate },
-        totalProducts: total,
-        totalNoDeleted: noDeleted,
-        percentageNoDeleted: {
-          withPrice: boleanPrice,
-          percentage: percentageResult,
+      return {
+        success: true,
+        message: 'Percentage of non-deleted products',
+        data: {
+          scope: { startDate, endDate },
+          totalProducts: total,
+          totalNoDeleted: noDeleted,
+          percentageNoDeleted: {
+            withPrice: boleanPrice,
+            percentage: percentageResult,
+          },
         },
-      },
-    };
+      };
+    } catch (error) {
+      this.handleException(error);
+    }
   }
 
   async getModelsByBrand(params: GetModelsByBrandParamsDto) {

@@ -8,11 +8,11 @@ export enum BooleanString {
 export class NonDeletedProductsParamsDto {
   @IsOptional()
   @IsDateString()
-  startDate: string; // ISO: '2025-08-01T00:00:00Z'
+  startDate?: string; // ISO: '2025-08-01T00:00:00Z'
 
   @IsOptional()
   @IsDateString()
-  endDate: string; // ISO
+  endDate?: string; // ISO
 
   @IsOptional()
   @IsEnum(BooleanString)
