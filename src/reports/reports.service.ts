@@ -6,6 +6,15 @@ import { Repository } from 'typeorm';
 import { BooleanString, NonDeletedProductsParamsDto } from './dto/nonDeleteProducts-reports.dto';
 import { GetModelsByBrandParamsDto } from './dto/getModelByBrand.dto';
 
+type BrandBucket = {
+  brand: string;
+  models: (string | undefined)[];
+  minPrice: number;
+  maxPrice: number;
+  averagePrice: number;
+  products: Product[];
+};
+
 @Injectable()
 export class ReportsService {
   private readonly logger = new Logger(ReportsService.name);
@@ -103,11 +112,11 @@ export class ReportsService {
   async getModelsByBrand(params: GetModelsByBrandParamsDto) {
     try {
       const { brands } = params;
-      let isActive = true;
-      let brandsArray = brands ? brands.split(',').map(brand => brand.trim().toLowerCase()) : [];
+      const isActive = true;
+      const brandsArray = brands ? brands.split(',').map(brand => brand.trim().toLowerCase()) : [];
       let products = await this.productsService.getAllProducts(isActive);
       if (brandsArray && brandsArray.length > 0) products = products.filter(product => brandsArray.includes(product.brand.toLowerCase()));
-      let result = products.reduce((acc, product) => {
+      let result = products.reduce((acc: Record<string, BrandBucket>, product) => {
         let brand = product.brand.toLowerCase();
         if (!acc[brand]) {
           acc[brand] = {
@@ -141,26 +150,21 @@ export class ReportsService {
   }
 
   private getAveragePrice(products: Product[]) {
-    let sum = products.reduce((sum, product) => sum + Number(product.price), 0);
-    let average = sum / products.length;
+    const sum = products.reduce((sum, product) => sum + Number(product.price), 0);
+    const average = sum / products.length;
     return Number(average.toFixed(2));
   }
 
-  private handleException(error: Error): never {
-    this.logger.error(error.message, error.stack);
-    if (error instanceof NotFoundException) {
-      throw error;
-    } else if (error.name === 'QueryFailedError') {
-      throw new BadRequestException({ success: false, message: error.message });
-    } else if (error instanceof ConflictException) {
-      throw new ConflictException({ success: false, message: error.message })
-    } else if (error instanceof UnauthorizedException) {
-      throw new UnauthorizedException({ success: false, message: error.message })
-    } else {
-      throw new InternalServerErrorException({
-        success: false,
-        message: 'An error occurred',
-      });
-    }
+  private handleException(err: unknown): never {
+    this.logger.error(err instanceof Error ? err.message : String(err));
+  if (err instanceof NotFoundException) throw err;
+  if (err instanceof ConflictException) throw err;
+  if (err instanceof UnauthorizedException) throw err;
+
+  if (err && typeof err === 'object' && 'name' in err && (err as any).name === 'QueryFailedError') {
+    throw new BadRequestException({ success: false, message: (err as Error).message });
+  }
+
+  throw new InternalServerErrorException({ success: false, message: 'An error occurred' });
   }
 }
