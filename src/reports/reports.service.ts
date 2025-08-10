@@ -90,7 +90,7 @@ export class ReportsService {
       message: 'Percentage of non-deleted products',
       data: {
         scope: { startDate, endDate },
-        totalProducts: total,          // total (en el rango si se envía)
+        totalProducts: total,          
         totalNoDeleted: noDeleted,
         percentageNoDeleted: {
           withPrice: boleanPrice,
@@ -142,7 +142,6 @@ export class ReportsService {
 
   private getAveragePrice(products: Product[]) {
     let sum = products.reduce((sum, product) => sum + Number(product.price), 0);
-    console.log("sum", sum);
     let average = sum / products.length;
     return Number(average.toFixed(2));
   }

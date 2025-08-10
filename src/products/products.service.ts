@@ -20,7 +20,7 @@ export class ProductsService {
     try{
       let products = await this.productRepository.find({ where: { isActive: true } });
       if (filters.name) products = products.filter(product => product.name.toLowerCase().includes(filters.name.toLowerCase()));
-      if (filters.category) products = products.filter(product => product.category.toLowerCase().includes(filters.category.toLowerCase()));
+      if (filters.category) products = products.filter(product => product.category.toLowerCase().trim().includes(filters.category.toLowerCase().trim()));
       if (filters.minPrice) products = products.filter(product => Number(product.price) >= filters.minPrice);
       if (filters.maxPrice) products = products.filter(product => Number(product.price) <= filters.maxPrice);
       if (filters.brand) products = products.filter(product => product.brand.toLowerCase().includes(filters.brand.toLowerCase()));
@@ -138,20 +138,18 @@ export class ProductsService {
       price: Number(item.fields.price),
       currency: item.fields.currency,
       stock: Number(item.fields.stock),
-      contentfulId: item.sys.id,
       contentType: item.sys.contentType.sys.id,
     };
-    const existingData = _.pick(existing, ['name', 'brand', 'model', 'category', 'color', 'price', 'stock', 'currency', 'contentfulId', 'contentType']);
+    const existingData = _.pick(existing, ['name', 'brand', 'model', 'category', 'color', 'price', 'stock', 'currency', 'contentType']);
     existingData.price = Number(existingData.price);
     existingData.stock = Number(existingData.stock);
-  
     return {item: contentfulData, isEqual: _.isEqual(contentfulData, existingData)};
   }
 
   private handleException(error: Error): never {
     this.logger.error(error.message, error.stack);
     if (error instanceof NotFoundException) {
-      throw error;
+      throw new NotFoundException({ success: false, message: error.message });
     } else if (error.name === 'QueryFailedError') {
       throw new BadRequestException({ success: false, message: error.message });
     } else if (error instanceof ConflictException) {

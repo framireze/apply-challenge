@@ -19,7 +19,41 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  api:
+    container_name: apply-challenge-backend
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - PORT=3000
+      - NODE_ENV=${NODE_ENV:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   postgres_data:
     driver: local
+
+networks:
+  app-network:
+    driver: bridge
