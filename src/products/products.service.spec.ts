@@ -34,18 +34,66 @@ const contentfulItem = (over: Partial<any> = {}) => ({
 });
 
 const productRows: Product[] = [
-  { id: '1', sku: 'A1', name: 'Apple Watch', brand: 'Apple', model: 'M1',
-    category: 'Smartwatch', color: 'Black', price: 199.99 as any, currency: 'USD',
-    stock: 10, isActive: true, deletedAt: null, contentType: 'product' } as any,
-  { id: '2', sku: 'B1', name: 'Asus Laptop', brand: 'Asus', model: 'Z1',
-    category: 'Laptop', color: 'Gray', price: 999.00 as any, currency: 'USD',
-    stock: 5, isActive: true, deletedAt: null, contentType: 'product' } as any,
-  { id: '3', sku: 'C1', name: 'LG TV', brand: 'LG', model: 'G1',
-    category: 'TV', color: 'Gray', price: 0 as any, currency: 'USD',
-    stock: 2, isActive: true, deletedAt: null, contentType: 'product' } as any,
-  { id: '4', sku: 'X1', name: 'Old Phone', brand: 'Nokia', model: '3310',
-    category: 'Phone', color: 'Blue', price: 49.99 as any, currency: 'USD',
-    stock: 0, isActive: false, deletedAt: new Date(), contentType: 'product' } as any,
+  {
+    id: '1',
+    sku: 'A1',
+    name: 'Apple Watch',
+    brand: 'Apple',
+    model: 'M1',
+    category: 'Smartwatch',
+    color: 'Black',
+    price: 199.99 as any,
+    currency: 'USD',
+    stock: 10,
+    isActive: true,
+    deletedAt: null,
+    contentType: 'product',
+  } as any,
+  {
+    id: '2',
+    sku: 'B1',
+    name: 'Asus Laptop',
+    brand: 'Asus',
+    model: 'Z1',
+    category: 'Laptop',
+    color: 'Gray',
+    price: 999.0 as any,
+    currency: 'USD',
+    stock: 5,
+    isActive: true,
+    deletedAt: null,
+    contentType: 'product',
+  } as any,
+  {
+    id: '3',
+    sku: 'C1',
+    name: 'LG TV',
+    brand: 'LG',
+    model: 'G1',
+    category: 'TV',
+    color: 'Gray',
+    price: 0 as any,
+    currency: 'USD',
+    stock: 2,
+    isActive: true,
+    deletedAt: null,
+    contentType: 'product',
+  } as any,
+  {
+    id: '4',
+    sku: 'X1',
+    name: 'Old Phone',
+    brand: 'Nokia',
+    model: '3310',
+    category: 'Phone',
+    color: 'Blue',
+    price: 49.99 as any,
+    currency: 'USD',
+    stock: 0,
+    isActive: false,
+    deletedAt: new Date(),
+    contentType: 'product',
+  } as any,
 ];
 
 describe('ProductsService', () => {
@@ -118,10 +166,10 @@ describe('ProductsService', () => {
     expect(all.length).toBe(4); // incluye el inactivo si tu dataset lo tuviera
 
     const onlyActive = await service.getAllProducts(true);
-    expect(onlyActive.every(p => p.isActive)).toBe(true);
+    expect(onlyActive.every((p) => p.isActive)).toBe(true);
 
     const onlyInactive = await service.getAllProducts(false);
-    expect(onlyInactive.every(p => !p.isActive)).toBe(true);
+    expect(onlyInactive.every((p) => !p.isActive)).toBe(true);
   });
 
   // -------- create --------
@@ -160,9 +208,9 @@ describe('ProductsService', () => {
   // -------- updateProduct --------
   it('updateProduct: NotFound si no existe', async () => {
     (repo.findOne as jest.Mock).mockResolvedValueOnce(null);
-    await expect(service.updateProduct('NOPE', { name: 'x' } as any)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.updateProduct('NOPE', { name: 'x' } as any),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('updateProduct: mergea y guarda', async () => {
@@ -178,17 +226,28 @@ describe('ProductsService', () => {
   // -------- deleteProduct --------
   it('deleteProduct: NotFound si no existe', async () => {
     (repo.findOne as jest.Mock).mockResolvedValue(null);
-    await expect(service.deleteProduct('NOPE')).rejects.toThrow(NotFoundException);
+    await expect(service.deleteProduct('NOPE')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('deleteProduct: marca isActive=false y setea deletedAt', async () => {
     const db: any = { sku: 'A1', isActive: true, deletedAt: null };
     (repo.findOne as jest.Mock).mockResolvedValue(db);
-    (repo.save as jest.Mock).mockResolvedValue({ ...db, isActive: false, deletedAt: new Date() });
+    (repo.save as jest.Mock).mockResolvedValue({
+      ...db,
+      isActive: false,
+      deletedAt: new Date(),
+    });
 
     const res = await service.deleteProduct('A1');
-    expect(repo.save).toHaveBeenCalledWith(expect.objectContaining({ isActive: false }));
-    expect(res).toEqual({ success: true, message: 'Product deleted successfully' });
+    expect(repo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ isActive: false }),
+    );
+    expect(res).toEqual({
+      success: true,
+      message: 'Product deleted successfully',
+    });
   });
 
   // -------- processProducts --------
@@ -240,8 +299,8 @@ describe('ProductsService', () => {
       .mockResolvedValueOnce(productRows[0]) // A1
       .mockResolvedValueOnce(productRows[1]); // B1
 
-    (repo.create as jest.Mock).mockImplementation(x => x);
-    (repo.save as jest.Mock).mockImplementation(x => Promise.resolve(x));
+    (repo.create as jest.Mock).mockImplementation((x) => x);
+    (repo.save as jest.Mock).mockImplementation((x) => Promise.resolve(x));
 
     const res = await service.processProducts(incoming as any);
 

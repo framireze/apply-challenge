@@ -14,13 +14,13 @@ export const AppDataSource = new DataSource({
   username: configService.get('DB_USERNAME'),
   password: configService.get('DB_PASSWORD'),
   database: configService.get('DB_NAME'),
-  
+
   synchronize: false,
   logging: true,
 
   entities: ['src/**/*.entity.ts'],
   migrations: ['src/migrations/*.ts'],
-  
+
   migrationsTableName: 'migrations_history',
   migrationsRun: false,
 });

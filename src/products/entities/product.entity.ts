@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, Index, BeforeInsert, BeforeUpdate } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+  BeforeInsert,
+} from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 
 @Entity('products')
@@ -85,4 +93,3 @@ export class Product {
     this.createdAt = new Date();
   }
 }
-

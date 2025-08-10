@@ -36,7 +36,9 @@ describe('ReportsController', () => {
   describe('getDeletedProductsReport', () => {
     it('should return deleted products report from service', async () => {
       const mockResponse = { success: true, data: { totalProducts: 10 } };
-      (service.getDeletedProductsReport as jest.Mock).mockResolvedValue(mockResponse);
+      (service.getDeletedProductsReport as jest.Mock).mockResolvedValue(
+        mockResponse,
+      );
 
       const result = await controller.getDeletedProductsReport();
 
@@ -53,11 +55,15 @@ describe('ReportsController', () => {
         withPrice: 'true' as any,
       };
       const mockResponse = { success: true, data: {} };
-      (service.getNonDeletedProductsPercentage as jest.Mock).mockResolvedValue(mockResponse);
+      (service.getNonDeletedProductsPercentage as jest.Mock).mockResolvedValue(
+        mockResponse,
+      );
 
       const result = await controller.getNonDeletedPercentage(query);
 
-      expect(service.getNonDeletedProductsPercentage).toHaveBeenCalledWith(query);
+      expect(service.getNonDeletedProductsPercentage).toHaveBeenCalledWith(
+        query,
+      );
       expect(result).toEqual(mockResponse);
     });
   });

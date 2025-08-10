@@ -3,21 +3,95 @@ import { ReportsService } from './reports.service';
 import { ProductsService } from 'src/products/products.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Product } from 'src/products/entities/product.entity';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { SelectQueryBuilder } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { BooleanString } from './dto/nonDeleteProducts-reports.dto';
 
-type MockType<T> = {
-  [P in keyof T]?: jest.Mock<{}>;
-};
-
-// ------ Mocks ------
-
 const mockProducts: Product[] = [
-  { id: '1', sku: 'A', name: 'N1', brand: 'Apple', model: 'M1', category: 'Phone', color: 'Black', price: 100, currency: 'USD', stock: 5, isActive: true, contentfulRevision: 1, contentType: 'product', createdAt: new Date(), updatedAt: new Date(), deletedAt: null, contentfulId: undefined, contentfulCreatedAt: undefined, contentfulUpdatedAt: undefined } as any,
-  { id: '2', sku: 'B', name: 'N2', brand: 'Apple', model: 'M2', category: 'Phone', color: 'Black', price: 200, currency: 'USD', stock: 3, isActive: false, contentfulRevision: 1, contentType: 'product', createdAt: new Date(), updatedAt: new Date(), deletedAt: new Date(), contentfulId: undefined, contentfulCreatedAt: undefined, contentfulUpdatedAt: undefined } as any,
-  { id: '3', sku: 'C', name: 'N3', brand: 'LG',    model: 'G1', category: 'TV',    color: 'Gray',  price: 0,   currency: 'USD', stock: 10, isActive: true, contentfulRevision: 1, contentType: 'product', createdAt: new Date(), updatedAt: new Date(), deletedAt: null, contentfulId: undefined, contentfulCreatedAt: undefined, contentfulUpdatedAt: undefined } as any,
-  { id: '4', sku: 'D', name: 'N4', brand: 'Asus',  model: 'Z1', category: 'Laptop',color: 'Gray',  price: 150, currency: 'USD', stock: 2,  isActive: true, contentfulRevision: 1, contentType: 'product', createdAt: new Date(), updatedAt: new Date(), deletedAt: null, contentfulId: undefined, contentfulCreatedAt: undefined, contentfulUpdatedAt: undefined } as any,
+  {
+    id: '1',
+    sku: 'A',
+    name: 'N1',
+    brand: 'Apple',
+    model: 'M1',
+    category: 'Phone',
+    color: 'Black',
+    price: 100,
+    currency: 'USD',
+    stock: 5,
+    isActive: true,
+    contentfulRevision: 1,
+    contentType: 'product',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    contentfulId: undefined,
+    contentfulCreatedAt: undefined,
+    contentfulUpdatedAt: undefined,
+  } as any,
+  {
+    id: '2',
+    sku: 'B',
+    name: 'N2',
+    brand: 'Apple',
+    model: 'M2',
+    category: 'Phone',
+    color: 'Black',
+    price: 200,
+    currency: 'USD',
+    stock: 3,
+    isActive: false,
+    contentfulRevision: 1,
+    contentType: 'product',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: new Date(),
+    contentfulId: undefined,
+    contentfulCreatedAt: undefined,
+    contentfulUpdatedAt: undefined,
+  } as any,
+  {
+    id: '3',
+    sku: 'C',
+    name: 'N3',
+    brand: 'LG',
+    model: 'G1',
+    category: 'TV',
+    color: 'Gray',
+    price: 0,
+    currency: 'USD',
+    stock: 10,
+    isActive: true,
+    contentfulRevision: 1,
+    contentType: 'product',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    contentfulId: undefined,
+    contentfulCreatedAt: undefined,
+    contentfulUpdatedAt: undefined,
+  } as any,
+  {
+    id: '4',
+    sku: 'D',
+    name: 'N4',
+    brand: 'Asus',
+    model: 'Z1',
+    category: 'Laptop',
+    color: 'Gray',
+    price: 150,
+    currency: 'USD',
+    stock: 2,
+    isActive: true,
+    contentfulRevision: 1,
+    contentType: 'product',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    contentfulId: undefined,
+    contentfulCreatedAt: undefined,
+    contentfulUpdatedAt: undefined,
+  } as any,
 ];
 
 const mockProductsService = {
@@ -37,7 +111,6 @@ const createQueryBuilderMock = () => {
 describe('ReportsService', () => {
   let service: ReportsService;
   let productsService: typeof mockProductsService;
-  let productRepo: Repository<Product>;
   let qb: ReturnType<typeof createQueryBuilderMock>;
 
   beforeEach(async () => {
@@ -58,7 +131,6 @@ describe('ReportsService', () => {
 
     service = module.get<ReportsService>(ReportsService);
     productsService = module.get(ProductsService);
-    productRepo = module.get(getRepositoryToken(Product));
   });
 
   afterEach(() => {
@@ -79,7 +151,7 @@ describe('ReportsService', () => {
   });
 
   it('getDeletedProductsReport: maneja errores con handleException', async () => {
-    (productsService.getAllProducts as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
+    productsService.getAllProducts.mockRejectedValueOnce(new Error('DB error'));
 
     await expect(service.getDeletedProductsReport()).rejects.toThrow();
   });
@@ -101,7 +173,10 @@ describe('ReportsService', () => {
     } as any);
 
     // no agrega BETWEEN
-    expect(qb.andWhere).not.toHaveBeenCalledWith(expect.stringContaining('BETWEEN'), expect.any(Object));
+    expect(qb.andWhere).not.toHaveBeenCalledWith(
+      expect.stringContaining('BETWEEN'),
+      expect.any(Object),
+    );
 
     expect(res.success).toBe(true);
     expect(res.data.totalProducts).toBe(100);
@@ -178,12 +253,26 @@ describe('ReportsService', () => {
     expect(productsService.getAllProducts).toHaveBeenCalledWith(true); // tu servicio lo llama con isActive = true
     expect(res.success).toBe(true);
 
-    const data = res.data as Record<string, any>;
+    const data = res.data as Record<
+      string,
+      {
+        models: Array<string | undefined>;
+        minPrice: number;
+        maxPrice: number;
+        averagePrice: number;
+        products: unknown[];
+      }
+    >;
     // Apple
-    expect(data['apple']).toBeDefined();
-    expect(data['apple'].models.sort()).toEqual(['M1', 'M2'].sort());
-    expect(data['apple'].minPrice).toBe(100);
-    expect(data['apple'].maxPrice).toBe(200);
+    const apple = data['apple'];
+    expect(apple).toBeDefined();
+    const appleModels = apple.models
+      .filter((m): m is string => typeof m === 'string')
+      .slice()
+      .sort();
+    expect(appleModels).toEqual(['M1', 'M2'].sort());
+    expect(apple.minPrice).toBe(100);
+    expect(apple.maxPrice).toBe(200);
     expect(data['apple'].averagePrice).toBe(150);
 
     // lg
@@ -207,10 +296,13 @@ describe('ReportsService', () => {
 
   // ---- handleException (indirectamente ya lo cubrimos en getDeletedProductsReport error) ----
 
-  it('handleException: QueryFailedError -> BadRequestException', () => {
-    const error = new Error('boom');
-    error.name = 'QueryFailedError';
+  it('handleException: QueryFailedError -> BadRequestException (vía público)', async () => {
+    const boom = new Error('boom');
+    boom.name = 'QueryFailedError';
+    qb.getRawOne.mockRejectedValueOnce(boom);
 
-    expect(() => (service as any)['handleException'](error)).toThrow(BadRequestException);
+    await expect(service.getNonDeletedProductsPercentage({})).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });

@@ -15,9 +15,7 @@ describe('ProductsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProductsController],
-      providers: [
-        { provide: ProductsService, useValue: mockService },
-      ],
+      providers: [{ provide: ProductsService, useValue: mockService }],
     }).compile();
 
     controller = module.get(ProductsController);
@@ -38,7 +36,14 @@ describe('ProductsController', () => {
       limit: 5,
     } as any;
 
-    const mockResponse = { success: true, data: [], total: 0, page: 1, limit: 5, message: 'ok' };
+    const mockResponse = {
+      success: true,
+      data: [],
+      total: 0,
+      page: 1,
+      limit: 5,
+      message: 'ok',
+    };
     (service.getProducts as jest.Mock).mockResolvedValue(mockResponse);
 
     const res = await controller.getProducts(query);
@@ -47,10 +52,16 @@ describe('ProductsController', () => {
   });
 
   it('deleteProduct: delega con sku y retorna respuesta del servicio', async () => {
-    (service.deleteProduct as jest.Mock).mockResolvedValue({ success: true, message: 'Product deleted successfully' });
+    (service.deleteProduct as jest.Mock).mockResolvedValue({
+      success: true,
+      message: 'Product deleted successfully',
+    });
 
     const res = await controller.deleteProduct('A1');
     expect(service.deleteProduct).toHaveBeenCalledWith('A1');
-    expect(res).toEqual({ success: true, message: 'Product deleted successfully' });
+    expect(res).toEqual({
+      success: true,
+      message: 'Product deleted successfully',
+    });
   });
 });

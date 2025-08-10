@@ -19,16 +19,17 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       transform: true,
       transformOptions: {
-        enableImplicitConversion: true
+        enableImplicitConversion: true,
       },
       //exceptionFactory: (errors) => new BadRequestException(errors),
-    })
-  )
+    }),
+  );
 
   // 🎯 CONFIGURACIÓN DE SWAGGER
   const config = new DocumentBuilder()
     .setTitle('APPLY Challenge API')
-    .setDescription(`
+    .setDescription(
+      `
       API that synchronizes product data from Contentful every hour and provides 
       public endpoints with pagination/filtering and private administrative reports.
       
@@ -44,9 +45,10 @@ async function bootstrap() {
       \`Authorization: Bearer <your-jwt-token>\`
       
       Get token from: **POST /auth/jwt**
-    `)
+    `,
+    )
     .setVersion('1.0')
-    
+
     // 🔐 Configuración JWT para endpoints privados
     .addBearerAuth(
       {
@@ -59,14 +61,14 @@ async function bootstrap() {
       },
       'JWT-auth', // Nombre de referencia
     )
-    
+
     // 📊 Tags para agrupar endpoints
     .addTag('Products', 'Public product operations')
     .addTag('Reports', 'Private administrative reports')
-    
+
     // 🌐 Servers
     .addServer('http://localhost:3000', 'Development server')
-    
+
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
@@ -82,14 +84,17 @@ async function bootstrap() {
       operationsSorter: 'alpha',
     },
     customSiteTitle: 'APPLY Challenge API Documentation',
-    customfavIcon: 'https://media.licdn.com/dms/image/v2/C560BAQEGUtAomDxHHg/company-logo_200_200/company-logo_200_200/0/1630667871734/applydigital_logo?e=2147483647&v=beta&t=WA1J1Aa4lUf9XOS0P3RrAnBvXMwB9Ee_IwvPSpigk30',
+    customfavIcon:
+      'https://media.licdn.com/dms/image/v2/C560BAQEGUtAomDxHHg/company-logo_200_200/company-logo_200_200/0/1630667871734/applydigital_logo?e=2147483647&v=beta&t=WA1J1Aa4lUf9XOS0P3RrAnBvXMwB9Ee_IwvPSpigk30',
     customCssUrl: '/swagger-custom.css', // CSS personalizado opcional
   });
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
-    console.log(`📚 Swagger docs available at: http://localhost:${port}/api/docs`);
+    console.log(
+      `📚 Swagger docs available at: http://localhost:${port}/api/docs`,
+    );
   });
 }
 bootstrap();

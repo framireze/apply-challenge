@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsOptional, IsString } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 export class GetModelsByBrandParamsDto {
   @IsOptional()
@@ -38,11 +38,11 @@ export class ModelsByBrandSimpleResponseDto {
             currency: 'USD',
             stock: 69,
             isActive: true,
-            deletedAt: null
-          }
-        ]
-      }
-    }
+            deletedAt: null,
+          },
+        ],
+      },
+    },
   })
   data: Record<string, any>;
 }

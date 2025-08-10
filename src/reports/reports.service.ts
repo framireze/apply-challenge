@@ -1,9 +1,20 @@
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from 'src/products/entities/product.entity';
 import { ProductsService } from 'src/products/products.service';
 import { Repository } from 'typeorm';
-import { BooleanString, NonDeletedProductsParamsDto } from './dto/nonDeleteProducts-reports.dto';
+import {
+  BooleanString,
+  NonDeletedProductsParamsDto,
+} from './dto/nonDeleteProducts-reports.dto';
 import { GetModelsByBrandParamsDto } from './dto/getModelByBrand.dto';
 
 type BrandBucket = {
@@ -23,29 +34,29 @@ export class ReportsService {
 
     @InjectRepository(Product)
     private productRepo: Repository<Product>,
-  ) {
-
-  }
+  ) {}
 
   async getDeletedProductsReport() {
     try {
       const products = await this.productsService.getAllProducts();
       console.log(products.length);
-      const deletedProducts = products.filter(product => {
+      const deletedProducts = products.filter((product) => {
         if (product.deletedAt) {
           return product;
         }
       });
       console.log(deletedProducts);
-      const percentage = Number(((deletedProducts.length / products.length) * 100).toFixed(2));
+      const percentage = Number(
+        ((deletedProducts.length / products.length) * 100).toFixed(2),
+      );
       return {
         success: true,
         message: 'Deleted products report',
         data: {
           totalProducts: products.length,
           deletedProducts: deletedProducts.length,
-          percentage
-        }
+          percentage,
+        },
       };
     } catch (error) {
       this.handleException(error);
@@ -54,7 +65,7 @@ export class ReportsService {
 
   async getNonDeletedProductsPercentage(params: NonDeletedProductsParamsDto) {
     const { startDate, endDate, withPrice } = params;
-    console.log("withPrice", withPrice);
+    console.log('withPrice', withPrice);
     const qb = this.productRepo
       .createQueryBuilder('p')
       .select([
@@ -85,13 +96,18 @@ export class ReportsService {
 
     let percentageResult: number;
 
-    let boleanPrice = withPrice === BooleanString.TRUE ? true : withPrice === BooleanString.FALSE ? false : undefined;
+    const boleanPrice =
+      withPrice === BooleanString.TRUE
+        ? true
+        : withPrice === BooleanString.FALSE
+          ? false
+          : undefined;
     if (boleanPrice == undefined) {
-      percentageResult = Number((noDeleted / total * 100).toFixed(2));
+      percentageResult = Number(((noDeleted / total) * 100).toFixed(2));
     } else if (boleanPrice) {
-      percentageResult = Number((withP / total * 100).toFixed(2));
+      percentageResult = Number(((withP / total) * 100).toFixed(2));
     } else {
-      percentageResult = Number((withoutP / total * 100).toFixed(2));
+      percentageResult = Number(((withoutP / total) * 100).toFixed(2));
     }
 
     return {
@@ -99,12 +115,12 @@ export class ReportsService {
       message: 'Percentage of non-deleted products',
       data: {
         scope: { startDate, endDate },
-        totalProducts: total,          
+        totalProducts: total,
         totalNoDeleted: noDeleted,
         percentageNoDeleted: {
           withPrice: boleanPrice,
-          percentage: percentageResult
-        }
+          percentage: percentageResult,
+        },
       },
     };
   }
@@ -113,36 +129,44 @@ export class ReportsService {
     try {
       const { brands } = params;
       const isActive = true;
-      const brandsArray = brands ? brands.split(',').map(brand => brand.trim().toLowerCase()) : [];
+      const brandsArray = brands
+        ? brands.split(',').map((brand) => brand.trim().toLowerCase())
+        : [];
       let products = await this.productsService.getAllProducts(isActive);
-      if (brandsArray && brandsArray.length > 0) products = products.filter(product => brandsArray.includes(product.brand.toLowerCase()));
-      let result = products.reduce((acc: Record<string, BrandBucket>, product) => {
-        let brand = product.brand.toLowerCase();
-        if (!acc[brand]) {
-          acc[brand] = {
-            brand: brand,
-            models: [product.model],
-            minPrice: product.price,
-            maxPrice: product.price,
-            averagePrice: product.price,
-            products: [product],
+      if (brandsArray && brandsArray.length > 0)
+        products = products.filter((product) =>
+          brandsArray.includes(product.brand.toLowerCase()),
+        );
+      const result = products.reduce(
+        (acc: Record<string, BrandBucket>, product) => {
+          const brand = product.brand.toLowerCase();
+          if (!acc[brand]) {
+            acc[brand] = {
+              brand: brand,
+              models: [product.model],
+              minPrice: product.price,
+              maxPrice: product.price,
+              averagePrice: product.price,
+              products: [product],
+            };
+          } else {
+            if (!acc[brand].models.includes(product.model)) {
+              acc[brand].models.push(product.model);
+            }
+            acc[brand].products.push(product);
+            acc[brand].minPrice = Math.min(acc[brand].minPrice, product.price);
+            acc[brand].maxPrice = Math.max(acc[brand].maxPrice, product.price);
+            acc[brand].averagePrice = this.getAveragePrice(acc[brand].products);
           }
-        }else{
-          if (!acc[brand].models.includes(product.model)) {
-            acc[brand].models.push(product.model);
-          }
-          acc[brand].products.push(product);
-          acc[brand].minPrice = Math.min(acc[brand].minPrice, product.price);
-          acc[brand].maxPrice = Math.max(acc[brand].maxPrice, product.price);
-          acc[brand].averagePrice = this.getAveragePrice(acc[brand].products);
-        }
-        return acc;
-      }, {});
-      
+          return acc;
+        },
+        {},
+      );
+
       return {
         success: true,
         message: 'Models by brand',
-        data: result
+        data: result,
       };
     } catch (error) {
       this.handleException(error);
@@ -150,21 +174,35 @@ export class ReportsService {
   }
 
   private getAveragePrice(products: Product[]) {
-    const sum = products.reduce((sum, product) => sum + Number(product.price), 0);
+    const sum = products.reduce(
+      (sum, product) => sum + Number(product.price),
+      0,
+    );
     const average = sum / products.length;
     return Number(average.toFixed(2));
   }
 
   private handleException(err: unknown): never {
     this.logger.error(err instanceof Error ? err.message : String(err));
-  if (err instanceof NotFoundException) throw err;
-  if (err instanceof ConflictException) throw err;
-  if (err instanceof UnauthorizedException) throw err;
+    if (err instanceof NotFoundException) throw err;
+    if (err instanceof ConflictException) throw err;
+    if (err instanceof UnauthorizedException) throw err;
 
-  if (err && typeof err === 'object' && 'name' in err && (err as any).name === 'QueryFailedError') {
-    throw new BadRequestException({ success: false, message: (err as Error).message });
-  }
+    if (
+      err &&
+      typeof err === 'object' &&
+      'name' in err &&
+      (err as { name?: string }).name === 'QueryFailedError'
+    ) {
+      throw new BadRequestException({
+        success: false,
+        message: (err as Error).message,
+      });
+    }
 
-  throw new InternalServerErrorException({ success: false, message: 'An error occurred' });
+    throw new InternalServerErrorException({
+      success: false,
+      message: 'An error occurred',
+    });
   }
 }

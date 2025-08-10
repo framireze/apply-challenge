@@ -1,6 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { BadRequestException, ConflictException, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ContentfulService } from './contentful.service';
 import { ProductsService } from 'src/products/products.service';
 import axios from 'axios';
@@ -12,22 +18,21 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('ContentfulService', () => {
   let service: ContentfulService;
   let configService: ConfigService;
-  let productsService: ProductsService;
 
   const mockConfigService = {
     get: jest.fn((key: string) => {
       const config = {
-        'CONTENTFUL_SPACE_ID': 'test-space-id',
-        'CONTENTFUL_ACCESS_TOKEN': 'test-access-token',
-        'CONTENTFUL_ENVIRONMENT': 'master',
-        'CONTENTFUL_CONTENT_TYPE': 'product'
+        CONTENTFUL_SPACE_ID: 'test-space-id',
+        CONTENTFUL_ACCESS_TOKEN: 'test-access-token',
+        CONTENTFUL_ENVIRONMENT: 'master',
+        CONTENTFUL_CONTENT_TYPE: 'product',
       };
       return config[key];
-    })
+    }),
   };
 
   const mockProductsService = {
-    processProducts: jest.fn()
+    processProducts: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -35,13 +40,12 @@ describe('ContentfulService', () => {
       providers: [
         ContentfulService,
         { provide: ConfigService, useValue: mockConfigService },
-        { provide: ProductsService, useValue: mockProductsService }
+        { provide: ProductsService, useValue: mockProductsService },
       ],
     }).compile();
 
     service = module.get<ContentfulService>(ContentfulService);
     configService = module.get<ConfigService>(ConfigService);
-    productsService = module.get<ProductsService>(ProductsService);
   });
 
   afterEach(() => {
@@ -63,7 +67,12 @@ describe('ContentfulService', () => {
       data: {
         items: [
           {
-            sys: { id: '1', createdAt: '2024-01-01', updatedAt: '2024-01-01', revision: 1 },
+            sys: {
+              id: '1',
+              createdAt: '2024-01-01',
+              updatedAt: '2024-01-01',
+              revision: 1,
+            },
             fields: {
               sku: 'TEST123',
               name: 'Test Product',
@@ -71,18 +80,18 @@ describe('ContentfulService', () => {
               category: 'Electronics',
               price: 99.99,
               currency: 'USD',
-              stock: 10
-            }
-          }
-        ]
-      }
+              stock: 10,
+            },
+          },
+        ],
+      },
     };
 
     const mockProcessResults = {
       created: 1,
       updated: 0,
       notAffected: 0,
-      skuAffected: ['TEST123']
+      skuAffected: ['TEST123'],
     };
 
     it('should sync products successfully', async () => {
@@ -95,7 +104,9 @@ describe('ContentfulService', () => {
 
       // Assert
       expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-      expect(mockProductsService.processProducts).toHaveBeenCalledWith(mockContentfulResponse.data.items);
+      expect(mockProductsService.processProducts).toHaveBeenCalledWith(
+        mockContentfulResponse.data.items,
+      );
       expect(result).toEqual(mockProcessResults);
     });
 
@@ -105,7 +116,9 @@ describe('ContentfulService', () => {
       mockedAxios.get.mockRejectedValue(axiosError);
 
       // Act & Assert
-      await expect(service.syncProducts()).rejects.toThrow(InternalServerErrorException);
+      await expect(service.syncProducts()).rejects.toThrow(
+        InternalServerErrorException,
+      );
       expect(mockedAxios.get).toHaveBeenCalledTimes(1);
       expect(mockProductsService.processProducts).not.toHaveBeenCalled();
     });
@@ -119,7 +132,9 @@ describe('ContentfulService', () => {
 
       // Act & Assert
       await expect(service.syncProducts()).rejects.toThrow(BadRequestException);
-      expect(mockProductsService.processProducts).toHaveBeenCalledWith(mockContentfulResponse.data.items);
+      expect(mockProductsService.processProducts).toHaveBeenCalledWith(
+        mockContentfulResponse.data.items,
+      );
     });
 
     it('should log successful sync', async () => {
@@ -133,8 +148,12 @@ describe('ContentfulService', () => {
 
       // Assert
       expect(loggerSpy).toHaveBeenCalledWith('Starting sync...');
-      expect(loggerSpy).toHaveBeenCalledWith('📦 Fetched 1 products from Contentful');
-      expect(loggerSpy).toHaveBeenCalledWith('Sync completed: 1 created, 0 updated, 0 not affected, 1 sku affected');
+      expect(loggerSpy).toHaveBeenCalledWith(
+        '📦 Fetched 1 products from Contentful',
+      );
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Sync completed: 1 created, 0 updated, 0 not affected, 1 sku affected',
+      );
     });
 
     it('should log error on sync failure', async () => {
@@ -145,7 +164,10 @@ describe('ContentfulService', () => {
 
       // Act & Assert
       await expect(service.syncProducts()).rejects.toThrow();
-      expect(loggerSpy).toHaveBeenCalledWith('Contentful API error:', 'Test error');
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Contentful API error:',
+        'Test error',
+      );
     });
   });
 
@@ -155,7 +177,9 @@ describe('ContentfulService', () => {
       const notFoundError = new NotFoundException('Not found');
 
       // Act & Assert
-      expect(() => service['handleException'](notFoundError)).toThrow(NotFoundException);
+      expect(() => service['handleException'](notFoundError)).toThrow(
+        NotFoundException,
+      );
     });
 
     it('should transform QueryFailedError to BadRequestException', () => {
@@ -164,7 +188,9 @@ describe('ContentfulService', () => {
       queryError.name = 'QueryFailedError';
 
       // Act & Assert
-      expect(() => service['handleException'](queryError)).toThrow(BadRequestException);
+      expect(() => service['handleException'](queryError)).toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw ConflictException as is', () => {
@@ -172,7 +198,9 @@ describe('ContentfulService', () => {
       const conflictError = new ConflictException('Conflict');
 
       // Act & Assert
-      expect(() => service['handleException'](conflictError)).toThrow(ConflictException);
+      expect(() => service['handleException'](conflictError)).toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw UnauthorizedException as is', () => {
@@ -180,7 +208,9 @@ describe('ContentfulService', () => {
       const authError = new UnauthorizedException('Unauthorized');
 
       // Act & Assert
-      expect(() => service['handleException'](authError)).toThrow(UnauthorizedException);
+      expect(() => service['handleException'](authError)).toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should transform unknown error to InternalServerErrorException', () => {
@@ -188,7 +218,9 @@ describe('ContentfulService', () => {
       const unknownError = new Error('Unknown error');
 
       // Act & Assert
-      expect(() => service['handleException'](unknownError)).toThrow(InternalServerErrorException);
+      expect(() => service['handleException'](unknownError)).toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 
@@ -197,8 +229,11 @@ describe('ContentfulService', () => {
       // Arrange
       const mockResponse = { data: { items: [] } };
       mockedAxios.get.mockResolvedValue(mockResponse);
-      mockProductsService.processProducts.mockResolvedValue({ 
-        created: 0, updated: 0, notAffected: 0, skuAffected: [] 
+      mockProductsService.processProducts.mockResolvedValue({
+        created: 0,
+        updated: 0,
+        notAffected: 0,
+        skuAffected: [],
       });
 
       // Act
@@ -206,7 +241,7 @@ describe('ContentfulService', () => {
 
       // Assert
       expect(mockedAxios.get).toHaveBeenCalledWith(
-        'https://cdn.contentful.com/spaces/test-space-id/environments/master/entries?access_token=test-access-token&content_type=product'
+        'https://cdn.contentful.com/spaces/test-space-id/environments/master/entries?access_token=test-access-token&content_type=product',
       );
     });
 
@@ -214,8 +249,11 @@ describe('ContentfulService', () => {
       // Arrange
       const mockResponse = { data: { items: [] } };
       mockedAxios.get.mockResolvedValue(mockResponse);
-      mockProductsService.processProducts.mockResolvedValue({ 
-        created: 0, updated: 0, notAffected: 0, skuAffected: [] 
+      mockProductsService.processProducts.mockResolvedValue({
+        created: 0,
+        updated: 0,
+        notAffected: 0,
+        skuAffected: [],
       });
 
       // Act

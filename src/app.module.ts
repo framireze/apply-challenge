@@ -12,9 +12,7 @@ import { ContentfulModule } from './contentful/contentful.module';
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnvironment,
-      envFilePath: [
-        '.env'
-      ],
+      envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -25,13 +23,15 @@ import { ContentfulModule } from './contentful/contentful.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        ssl: configService.get<boolean>('DB_SSL') ? { rejectUnauthorized: false } : false,
+        ssl: configService.get<boolean>('DB_SSL')
+          ? { rejectUnauthorized: false }
+          : false,
         extra: {
           max: configService.get<number>('DB_POOL_SIZE'),
         },
-        autoLoadEntities: true,        
-        synchronize: false,        
-        //logging: configService.get<string>('NODE_ENV') === 'development', 
+        autoLoadEntities: true,
+        synchronize: false,
+        //logging: configService.get<string>('NODE_ENV') === 'development',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         //For migrations
         migrations: [__dirname + '/migrations/*.ts'],

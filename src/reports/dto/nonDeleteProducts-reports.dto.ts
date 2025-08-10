@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional } from 'class-validator';
 
 export enum BooleanString {
   TRUE = 'true',
@@ -13,7 +12,7 @@ export class NonDeletedProductsParamsDto {
 
   @IsOptional()
   @IsDateString()
-  endDate: string;   // ISO
+  endDate: string; // ISO
 
   @IsOptional()
   @IsEnum(BooleanString)
@@ -23,13 +22,13 @@ export class NonDeletedProductsParamsDto {
 export class NonDeletedProductsResponseDto {
   @ApiProperty({
     description: 'Operation success status',
-    example: true
+    example: true,
   })
   success: boolean;
 
   @ApiProperty({
     description: 'Success message',
-    example: 'Percentage of non-deleted products'
+    example: 'Percentage of non-deleted products',
   })
   message: string;
 
@@ -38,15 +37,15 @@ export class NonDeletedProductsResponseDto {
     example: {
       scope: {
         startDate: '2025-08-08',
-        endDate: '2025-08-09'
+        endDate: '2025-08-09',
       },
       totalProducts: 100,
       totalNoDeleted: 97,
       percentageNoDeleted: {
         withPrice: true,
-        percentage: 97
-      }
-    }
+        percentage: 97,
+      },
+    },
   })
   data: {
     scope: {

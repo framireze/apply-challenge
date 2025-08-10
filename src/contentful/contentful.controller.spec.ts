@@ -7,14 +7,14 @@ describe('ContentfulController', () => {
   let service: ContentfulService;
 
   const mockContentfulService = {
-    syncProducts: jest.fn()
+    syncProducts: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ContentfulController],
       providers: [
-        { provide: ContentfulService, useValue: mockContentfulService }
+        { provide: ContentfulService, useValue: mockContentfulService },
       ],
     }).compile();
 
@@ -33,11 +33,11 @@ describe('ContentfulController', () => {
   describe('syncProducts', () => {
     it('should call service syncProducts method', async () => {
       // Arrange
-      const expectedResult = { 
-        created: 5, 
-        updated: 2, 
-        notAffected: 10, 
-        skuAffected: ['SKU1', 'SKU2'] 
+      const expectedResult = {
+        created: 5,
+        updated: 2,
+        notAffected: 10,
+        skuAffected: ['SKU1', 'SKU2'],
       };
       mockContentfulService.syncProducts.mockResolvedValue(expectedResult);
 

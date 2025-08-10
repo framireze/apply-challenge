@@ -1,14 +1,26 @@
 import { Controller, Get, Param, Delete, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { GetProductsQueryDto, GetProductsResponseDto } from './dto/get-products-query.dto';
-import { ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  GetProductsQueryDto,
+  GetProductsResponseDto,
+} from './dto/get-products-query.dto';
+import {
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Products')
 @Controller('product')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
-    
-  @ApiOperation({ summary: 'Get products', description: `
+
+  @ApiOperation({
+    summary: 'Get products',
+    description: `
     Retrieve a paginated list of active products with optional filtering.
     
     *Pagination:*
@@ -19,7 +31,8 @@ export class ProductsController {
     - Filter by name (partial search)
     - Filter by exact category, brand, model
     - Filter by price range using minPrice and maxPrice
-  ` })
+  `,
+  })
   @ApiQuery({ name: 'name', type: String, required: false })
   @ApiQuery({ name: 'brand', type: String, required: false })
   @ApiQuery({ name: 'model', type: String, required: false })
@@ -35,14 +48,15 @@ export class ProductsController {
   }
 
   @Delete(':sku')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Delete product by SKU',
-    description: 'Soft delete a product using its SKU. The product will NOT reappear after Contentful sync.'
+    description:
+      'Soft delete a product using its SKU. The product will NOT reappear after Contentful sync.',
   })
-  @ApiParam({ 
-    name: 'sku', 
+  @ApiParam({
+    name: 'sku',
     description: 'Product SKU',
-    example: 'DJY7NF1T'
+    example: 'DJY7NF1T',
   })
   @ApiOkResponse({
     description: '✅ Product deleted successfully',
@@ -51,18 +65,18 @@ export class ProductsController {
       properties: {
         success: {
           type: 'boolean',
-          example: true
+          example: true,
         },
         message: {
           type: 'string',
-          example: 'Product deleted successfully'
-        }
+          example: 'Product deleted successfully',
+        },
       },
       example: {
         success: true,
-        message: 'Product deleted successfully'
-      }
-    }
+        message: 'Product deleted successfully',
+      },
+    },
   })
   @ApiNotFoundResponse({
     description: '❌ Product not found',
@@ -70,8 +84,8 @@ export class ProductsController {
       example: {
         success: false,
         message: 'Product not found',
-      }
-    }
+      },
+    },
   })
   deleteProduct(@Param('sku') sku: string) {
     return this.productsService.deleteProduct(sku);
