@@ -48,7 +48,8 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto) {
     try{      
       const product = this.productRepository.create(createProductDto);
-      return this.productRepository.save(product);
+      const saved = await this.productRepository.save(product);
+      return saved;
     } catch (error) {
       this.handleException(error);
     }
@@ -60,7 +61,7 @@ export class ProductsService {
       if (!product) {
         throw new NotFoundException('Product not found');
       }
-      return this.productRepository.save({ ...product, ...updateProductDto });
+      return await this.productRepository.save({ ...product, ...updateProductDto });
     } catch (error) {
       this.handleException(error);
     }

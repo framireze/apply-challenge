@@ -3,7 +3,6 @@ import { ReportsService } from './reports.service';
 import { NonDeletedProductsParamsDto, NonDeletedProductsResponseDto } from './dto/nonDeleteProducts-reports.dto';
 import { GetModelsByBrandParamsDto, ModelsByBrandSimpleResponseDto } from './dto/getModelByBrand.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { Public } from 'src/auth/decorators/public.decorator';
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOkResponse, ApiOperation, ApiQuery, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard)
