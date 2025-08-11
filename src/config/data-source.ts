@@ -1,11 +1,13 @@
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
+import { join } from 'path';
 
-// Cargar variables de entorno
 config();
 
 const configService = new ConfigService();
+const isTs = __filename.endsWith('.ts');
+const root = isTs ? 'src' : 'dist';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -18,8 +20,10 @@ export const AppDataSource = new DataSource({
   synchronize: false,
   logging: true,
 
-  entities: ['src/**/*.entity.ts'],
-  migrations: ['src/migrations/*.ts'],
+  entities: [join(process.cwd(), root, '/**/*.entity.' + (isTs ? 'ts' : 'js'))],
+  migrations: [
+    join(process.cwd(), root, '/migrations/*.' + (isTs ? 'ts' : 'js')),
+  ],
 
   migrationsTableName: 'migrations_history',
   migrationsRun: false,
